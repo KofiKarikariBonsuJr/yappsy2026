@@ -360,11 +360,20 @@ a {
 
 .doodle-caption {
   position: absolute;
-  bottom: 12px;
-  left: 28%;
-  font-size: 0.72rem;
-  font-weight: 800;
-  transform: rotate(3deg);
+  z-index: 4;
+  bottom: 62px;
+  left: 50%;
+  width: max-content;
+  max-width: 86%;
+  padding: 7px 11px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px dashed var(--ink);
+  border-radius: 12 px9px 13px 8px;
+  font-size: 0.76rem;
+  line-hieght: 1.25;
+  font-weight: 900;
+  transform: rotate(2deg);
 }
 
 .feature-section {
