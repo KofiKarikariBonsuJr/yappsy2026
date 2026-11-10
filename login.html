@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fff7e8" />
+  <title>Yappsy | Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-auth">
+  <header class="navbar">
+    <a class="logo" href="home.html" aria-label="Yappsy home">Yappsy<span class="logo-spark">✳</span></a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a class="nav-link" href="home.html">Home</a>
+      <a class="nav-link" href="chat.html">Chat</a>
+      <a class="nav-link active" href="login.html">Login</a>
+      <a class="nav-link" href="register.html">Register</a>
+    </nav>
+  </header>
+
+  <main class="auth-layout">
+    <section class="auth-side-note">
+      <span class="side-sticker sticker-purple" aria-hidden="true">HEY<br />YOU!</span>
+      <p class="section-kicker">BACK FOR MORE?</p>
+      <h1>Let's pick up<br />where the <span class="scribble-underline">yapping</span><br />left off.</h1>
+      <p>Your friends have probably said something weird while you were gone.</p>
+      <div class="side-doodle" aria-hidden="true">☻ <span>✳</span> 〰</div>
+    </section>
+
+    <section class="auth-card">
+      <div class="auth-card-tape" aria-hidden="true"></div>
+      <div class="auth-card-heading">
+        <span class="section-kicker">GOOD TO SEE YOU</span>
+        <h2>Log<span class="heading-wiggle"> in!</span></h2>
+        <p>Prove it's you. Then get back to being a menace.</p>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Your secret password" autocomplete="current-password" required />
+
+        <button type="submit" class="btn btn-coral btn-submit" id="loginButton">Log me in <span aria-hidden="true">→</span></button>
+      </form>
+
+      <div id="mfaBox" class="mfa-box" hidden>
+        <div class="mfa-sticker" aria-hidden="true">2ND<br />STEP</div>
+        <h3>One more thing...</h3>
+        <p>Your MFA code is in the backend terminal for this class demo.</p>
+        <label for="mfaCode">Six-digit code</label>
+        <input type="text" id="mfaCode" name="mfaCode" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+        <button type="button" class="btn btn-purple btn-submit" id="verifyMfaButton">That's me <span aria-hidden="true">✓</span></button>
+        <button type="button" class="text-button" id="backToLogin">Wrong account? Go back</button>
+      </div>
+
+      <p class="form-message" id="message" role="status" aria-live="polite"></p>
+      <div class="auth-switch">New around here? <a href="register.html">Make an account</a>.</div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Yappsy © <span class="current-year"></span></span>
+    <span>Don't forget your password. We did.</span>
+  </footer>
+
+  <script>
+    // IMPORTANT: Change this IP if your backend VM receives a new address.
+    const BACKEND_URL = "http://192.168.48.131:3000";
+
+    let pendingEmail = "";
+
+    const loginForm = document.getElementById("loginForm");
+    const mfaBox = document.getElementById("mfaBox");
+    const message = document.getElementById("message");
+    const loginButton = document.getElementById("loginButton");
+    const verifyMfaButton = document.getElementById("verifyMfaButton");
+
+    document.querySelectorAll(".current-year").forEach(el => {
+      el.textContent = new Date().getFullYear();
+    });
+
+    // Clean up the bad "undefined" username from the earlier MFA bug.
+    if (localStorage.getItem("username") === "undefined" || localStorage.getItem("username") === "null") {
+      localStorage.removeItem("username");
+    }
+
+    function showMessage(text, type = "") {
+      message.textContent = text;
+      message.className = "form-message" + (type ? ` ${type}` : "");
+    }
+
+    async function getResponseData(response) {
+      const raw = await response.text();
+      try {
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        throw new Error("The backend returned an unexpected response. Check that the correct server is running.");
+      }
+    }
+
+    loginForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      showMessage("");
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        showMessage("Please enter your email and password.", "error");
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Checking credentials...";
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const result = await getResponseData(response);
+
+        if (!response.ok) {
+          showMessage(result.message || "Login failed. Check your details.", "error");
+          return;
+        }
+
+        // The current backend requires MFA. Do NOT save a username or redirect here.
+        if (result.mfaRequired === true && result.email) {
+          pendingEmail = result.email;
+          loginForm.hidden = true;
+          mfaBox.hidden = false;
+          document.getElementById("mfaCode").focus();
+          showMessage(result.message || "MFA code generated. Check the backend terminal.", "success");
+          return;
+        }
+
+        showMessage("The backend did not request MFA. Check that your updated server.js is running.", "error");
+        console.error("Unexpected /login response:", result);
+
+      } catch (error) {
+        console.error("Login request failed:", error);
+        showMessage(error.message || "Could not connect to the backend. Check its IP and that server.js is running.", "error");
+      } finally {
+        loginButton.disabled = false;
+        loginButton.innerHTML = 'Log me in <span aria-hidden="true">→</span>';
+      }
+    });
+
+    verifyMfaButton.addEventListener("click", verifyMfa);
+
+    document.getElementById("mfaCode").addEventListener("keydown", function (event) {
+      if (event.key === "Enter") verifyMfa();
+    });
+
+    async function verifyMfa() {
+      const codeInput = document.getElementById("mfaCode");
+      const code = codeInput.value.trim();
+
+      if (!pendingEmail) {
+        showMessage("Your login session has expired. Please enter your email and password again.", "error");
+        return;
+      }
+
+      if (!/^\d{6}$/.test(code)) {
+        showMessage("Enter the six-digit code from the backend terminal.", "error");
+        codeInput.focus();
+        return;
+      }
+
+      verifyMfaButton.disabled = true;
+      verifyMfaButton.textContent = "Verifying...";
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/verify-mfa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: pendingEmail, code })
+        });
+
+        const result = await getResponseData(response);
+
+        if (!response.ok) {
+          showMessage(result.message || "That code was not accepted.", "error");
+          return;
+        }
+
+        if (!result.username || typeof result.username !== "string") {
+          showMessage("MFA was accepted, but the backend did not return a username. Check /verify-mfa in server.js.", "error");
+          console.error("Unexpected /verify-mfa response:", result);
+          return;
+        }
+
+        // Only create the local login after MFA succeeds.
+        localStorage.setItem("username", result.username);
+        window.location.href = "home.html";
+
+      } catch (error) {
+        console.error("MFA verification failed:", error);
+        showMessage(error.message || "Could not verify the code. Check the backend connection.", "error");
+      } finally {
+        verifyMfaButton.disabled = false;
+        verifyMfaButton.innerHTML = "That's me <span aria-hidden=\"true\">✓</span>";
+      }
+    }
+
+    document.getElementById("backToLogin").addEventListener("click", function () {
+      pendingEmail = "";
+      document.getElementById("mfaCode").value = "";
+      mfaBox.hidden = true;
+      loginForm.hidden = false;
+      showMessage("");
+    });
+  </script>
+</body>
+</html>
