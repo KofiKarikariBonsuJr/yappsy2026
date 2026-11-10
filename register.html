@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fff7e8" />
+  <title>Yappsy | Register</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-auth">
+  <header class="navbar">
+    <a class="logo" href="home.html" aria-label="Yappsy home">Yappsy<span class="logo-spark">✳</span></a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a class="nav-link" href="home.html">Home</a>
+      <a class="nav-link" href="chat.html">Chat</a>
+      <a class="nav-link" href="login.html">Login</a>
+      <a class="nav-link active" href="register.html">Register</a>
+    </nav>
+  </header>
+
+  <main class="auth-layout register-layout">
+    <section class="auth-side-note register-side-note">
+      <span class="side-sticker sticker-coral" aria-hidden="true">NEW<br />FRIEND!</span>
+      <p class="section-kicker">WELCOME TO THE NONSENSE</p>
+      <h1>Make an account.<br /><span class="scribble-underline">Make some</span><br />bad decisions.</h1>
+      <p>It takes about a minute. The group chat chaos is forever.</p>
+      <div class="side-doodle" aria-hidden="true">♡ <span>✳</span> ☻</div>
+    </section>
+
+    <section class="auth-card">
+      <div class="auth-card-tape tape-mint" aria-hidden="true"></div>
+      <div class="auth-card-heading">
+        <span class="section-kicker">COME ON IN</span>
+        <h2>Regi<span class="heading-wiggle">ster!</span></h2>
+        <p>Pick a name. Pick a password. Become a yapper.</p>
+      </div>
+
+      <form id="registerForm" class="auth-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="What should we call you?" autocomplete="username" minlength="3" maxlength="24" required />
+
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="At least 6 characters" autocomplete="new-password" minlength="6" required />
+
+        <label for="confirmPassword">Confirm password</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Type it again. You got this." autocomplete="new-password" required />
+
+        <button type="submit" class="btn btn-mint btn-submit" id="registerButton">Create my account <span aria-hidden="true">↗</span></button>
+      </form>
+
+      <p class="form-message" id="message" role="status" aria-live="polite"></p>
+      <div class="auth-switch">Already one of us? <a href="login.html">Log in here</a>.</div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Yappsy © <span class="current-year"></span></span>
+    <span>Fresh account. Same goofy internet.</span>
+  </footer>
+
+  <script>
+    // IMPORTANT: Change this IP if your backend VM receives a new address.
+    const BACKEND_URL = "http://192.168.48.131:3000";
+
+    const registerForm = document.getElementById("registerForm");
+    const registerButton = document.getElementById("registerButton");
+    const message = document.getElementById("message");
+
+    document.querySelectorAll(".current-year").forEach(el => {
+      el.textContent = new Date().getFullYear();
+    });
+
+    function showMessage(text, type = "") {
+      message.textContent = text;
+      message.className = "form-message" + (type ? ` ${type}` : "");
+    }
+
+    registerForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      showMessage("");
+
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      if (username.length < 3) {
+        showMessage("Your username needs at least 3 characters.", "error");
+        return;
+      }
+
+      if (password.length < 6) {
+        showMessage("Your password needs at least 6 characters.", "error");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showMessage("Those passwords don't match. Give it another go.", "error");
+        return;
+      }
+
+      registerButton.disabled = true;
+      registerButton.textContent = "Making your account...";
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, email, password })
+        });
+
+        const raw = await response.text();
+        let result;
+
+        try {
+          result = raw ? JSON.parse(raw) : {};
+        } catch {
+          throw new Error("The backend returned an unexpected response. Check that server.js is running.");
+        }
+
+        if (!response.ok) {
+          showMessage(result.message || "Registration failed. Please try again.", "error");
+          return;
+        }
+
+        registerForm.reset();
+        showMessage("Account created! Now log in and complete your MFA check.", "success");
+
+        const loginLink = document.createElement("a");
+        loginLink.href = "login.html";
+        loginLink.className = "success-link";
+        loginLink.textContent = "Go to login →";
+        message.appendChild(document.createElement("br"));
+        message.appendChild(loginLink);
+
+      } catch (error) {
+        console.error("Registration error:", error);
+        showMessage(error.message || "Could not connect to the backend. Check its IP and that server.js is running.", "error");
+      } finally {
+        registerButton.disabled = false;
+        registerButton.innerHTML = 'Create my account <span aria-hidden="true">↗</span>';
+      }
+    });
+  </script>
+</body>
+</html>
