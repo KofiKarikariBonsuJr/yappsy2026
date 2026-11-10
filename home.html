@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fff7e8" />
+  <title>Yappsy | Home</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-home">
+  <header class="navbar">
+    <a class="logo" href="home.html" aria-label="Yappsy home">Yappsy<span class="logo-spark">✳</span></a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a class="nav-link active" href="home.html">Home</a>
+      <a class="nav-link" href="chat.html">Chat</a>
+      <a class="nav-link" id="authLink" href="login.html">Login</a>
+      <a class="nav-link" id="registerLink" href="register.html">Register</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="home-hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> THE INTERNET'S LEAST SERIOUS CHAT APP</div>
+        <h1>Say stuff.<br /><span class="headline-highlight">Send nonsense.</span></h1>
+        <p class="hero-description">
+          Yappsy is where your friends, questionable GIF choices, and completely unnecessary conversations all come together.
+        </p>
+        <p class="welcome-user" id="welcomeUser" hidden></p>
+
+        <div class="hero-actions" id="heroButtons">
+          <a class="btn btn-coral" href="register.html">Get yapping <span aria-hidden="true">↗</span></a>
+          <a class="btn btn-outline" href="login.html">I already yap</a>
+        </div>
+        <div class="tiny-note"><span aria-hidden="true">↳</span> No serious conversations guaranteed.</div>
+      </div>
+
+      <div class="hero-doodle" aria-label="Decorative chat illustration">
+        <span class="doodle-star star-one" aria-hidden="true">✳</span>
+        <span class="doodle-star star-two" aria-hidden="true">✦</span>
+        <span class="doodle-word">YAP!</span>
+        <div class="speech-bubble bubble-coral">hey. you up?</div>
+        <div class="speech-bubble bubble-mint">unfortunately yes</div>
+        <div class="speech-bubble bubble-yellow">excellent.</div>
+        <span class="doodle-arrow" aria-hidden="true">〰</span>
+        <span class="doodle-caption">a very important conversation</span>
+      </div>
+    </section>
+
+    <section class="feature-section">
+      <div class="section-heading">
+        <span class="section-kicker">WHAT CAN YOU DO HERE?</span>
+        <h2>Three whole reasons to procrastinate.</h2>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card feature-coral">
+          <div class="feature-icon" aria-hidden="true">＋</div>
+          <span class="feature-number">01 / FRIENDS</span>
+          <h3>Collect your people</h3>
+          <p>Add friends and build your very own collection of yappers.</p>
+          <span class="card-scribble" aria-hidden="true">♡</span>
+        </article>
+
+        <article class="feature-card feature-purple">
+          <div class="feature-icon" aria-hidden="true">⌕</div>
+          <span class="feature-number">02 / DISCOVERY</span>
+          <h3>Find new yappers</h3>
+          <p>Search for other users. Maybe they're cool. Maybe they're weird. Find out.</p>
+          <span class="card-scribble" aria-hidden="true">?</span>
+        </article>
+
+        <article class="feature-card feature-lime">
+          <div class="feature-icon" aria-hidden="true">GIF</div>
+          <span class="feature-number">03 / REACTIONS</span>
+          <h3>Speak in GIFs</h3>
+          <p>Because sometimes words are hard and a dancing frog says it better.</p>
+          <span class="card-scribble" aria-hidden="true">!</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="bottom-banner">
+      <span class="banner-sticker" aria-hidden="true">YAP<br />YAP</span>
+      <div>
+        <p class="section-kicker">YOUR KEYBOARD IS GETTING LONELY</p>
+        <h2>Go bother your friends.</h2>
+      </div>
+      <a class="btn btn-dark" href="chat.html">Open chat <span aria-hidden="true">→</span></a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Yappsy © <span id="year"></span></span>
+    <span>Made for yapping, not productivity.</span>
+  </footer>
+
+  <script>
+    const username = localStorage.getItem("username");
+    const welcomeUser = document.getElementById("welcomeUser");
+    const authLink = document.getElementById("authLink");
+    const registerLink = document.getElementById("registerLink");
+    const heroButtons = document.getElementById("heroButtons");
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Remove the invalid value left by older versions of the login page.
+    if (username === "undefined" || username === "null" || username === "") {
+      localStorage.removeItem("username");
+    }
+
+    const loggedInUser = localStorage.getItem("username");
+
+    if (loggedInUser) {
+      welcomeUser.textContent = `Well, well, well... if it isn't ${loggedInUser}.`;
+      welcomeUser.hidden = false;
+
+      authLink.textContent = "Logout";
+      authLink.href = "#";
+      registerLink.hidden = true;
+
+      authLink.addEventListener("click", function (event) {
+        event.preventDefault();
+        localStorage.removeItem("username");
+        window.location.href = "home.html";
+      });
+
+      heroButtons.innerHTML = `
+        <a class="btn btn-coral" href="chat.html">Open the chat <span aria-hidden="true">↗</span></a>
+        <button class="btn btn-outline" type="button" id="heroLogout">Log out</button>
+      `;
+
+      document.getElementById("heroLogout").addEventListener("click", function () {
+        localStorage.removeItem("username");
+        window.location.href = "home.html";
+      });
+    }
+  </script>
+</body>
+</html>
